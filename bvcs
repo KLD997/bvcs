@@ -1,0 +1,107 @@
+#!/bin/sh
+
+BVCS_TEMP_DIR="${HOME}/.bvcs_temp_dir"
+
+help_command() {
+    echo "BVCS - A suckless VCS."
+    echo "Commands:"
+    echo "  checkout [id] -- Checkout worktree to 'id' commit."
+    echo "  commit [id]   -- Commit your changes."
+    echo "  help          -- Prints this message."
+    echo "  init          -- Initializes the current directory as a gut repository."
+    echo "  log           -- View log of commits of the repository."
+}
+
+if [ "$#" -lt 1 ]
+then
+    echo "[-] Not enough arguments."
+    help_command
+    exit 1
+fi
+
+if [ "$1" != "checkout" -a "$1" != "commit" -a "$1" != "help" -a "$1" != "init" -a "$1" != "log" ]
+then
+    echo "[-] Invalid command - ${1}"
+    help_command
+    exit 1
+fi
+
+if [ "$1" = "checkout" ] || [ "$1" = "commit" ]
+then
+    if [ "$#" -lt 2 ]
+    then
+        echo "[-] Not enough arguments."
+        help_command
+        exit 1
+    fi
+fi
+
+if [ "$1" = "log" ]
+then
+    log=$(ls -A .bvcs)
+    arr=($(echo $log | tr ' ' '\n'))
+    for i in "${arr[@]}"
+    do
+        echo $i
+    done
+    exit 0
+fi
+
+if [ "$1" = "help" ]
+then
+    help_command
+    exit 0
+fi
+
+if [ "$1" = "init" ]
+then
+    echo "[*] Initializing an empty bvcs repository..."
+    test -d ".bvcs" || mkdir ".bvcs"
+    echo "[+] Done!"
+    exit 0
+fi
+
+if [ "$1" = "commit" ]
+then
+    echo "[*] Committing changes..."
+    test -d ".bvcs/${2}"
+    if [ "$?" -eq 0 ]
+    then
+        echo "[-] Commit with ID - ${2} - already exists"
+        exit 1
+    fi
+    this_dir=$(pwd)
+    test -d $BVCS_TEMP_DIR && rm -r $BVCS_TEMP_DIR
+    cp -r $this_dir $BVCS_TEMP_DIR
+    cp -r $BVCS_TEMP_DIR ".bvcs/${2}"
+    rm -r $BVCS_TEMP_DIR
+    echo "[+] Committed with ID - ${2}!"
+    exit 0
+fi
+
+if [ "$1" = "checkout" ]
+then
+    echo "[*] Checking-out to ${2} commit..."
+    test -d ".bvcs/${2}"
+    if [ "$?" -ne 0 ]
+    then
+        echo "[-] Couldn't find commit with ID - ${2}."
+        exit 1
+    fi
+    rmf=$(ls -A | grep -v '.bvcs')
+    if [ "$rmf" != "" ]
+    then
+        rm -r $(ls -A | grep -v '.bvcs')
+    fi
+    files=$(ls -A ".bvcs/${2}" | grep -v '.bvcs')
+    arr=($(echo $files | tr '\n' '\n'))
+    for i in "${arr[@]}"
+    do
+        cp -r ".bvcs/${2}/${i}" $(pwd)
+    done
+    echo "[+] Checked-out to commit - ${2}!"
+    exit 0
+fi
+
+help_command
+exit 1
