@@ -8,7 +8,7 @@ help_command() {
     echo "  checkout [id] -- Checkout worktree to 'id' commit."
     echo "  commit [id]   -- Commit your changes."
     echo "  help          -- Prints this message."
-    echo "  init          -- Initializes the current directory as a gut repository."
+    echo "  init          -- Initializes the current directory as a repository."
     echo "  log           -- View log of commits of the repository."
 }
 
